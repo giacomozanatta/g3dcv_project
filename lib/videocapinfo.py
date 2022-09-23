@@ -1,7 +1,7 @@
 import cv2
 
 class VideoCapInfo:
-    """ This is a class stores useful information of a cv2.VideoCapture object, such as: total frames, video width, video height, and fps.
+    """ This class stores useful information about a cv2.VideoCapture object, such as: total frames, video width, video height, and fps.
         Can be constructed passing a cv2.VideoCapture object
     """
     def __init__(self, cap: cv2.VideoCapture):
