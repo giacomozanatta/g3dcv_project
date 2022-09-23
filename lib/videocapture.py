@@ -10,7 +10,9 @@ class VideoCapture:
         self.cap = cv2.VideoCapture(file_name)
         self.video_cap_info = VideoCapInfo(self.cap)
 
-    def process_video(self, process_func, frames_to_process):
+    def process_video(self, process_func, frames_to_process=None):
+        if frames_to_process == None:
+            frames_to_process = self.video_cap_info.total_frames;
         for i in range(frames_to_process):
             frame_offset = int(self.video_cap_info.total_frames/frames_to_process)
             frame_to_process = frame_offset*(i)
