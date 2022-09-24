@@ -25,5 +25,5 @@ class VideoCapture:
                 process_func(frame)
     def get_first_frame(self):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        ret, frame = self.cap.read()
+        _, frame = self.cap.read()
         return frame
