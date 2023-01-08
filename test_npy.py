@@ -7,4 +7,3 @@ print("*****GENERATED K*****")
 print(np.load("output/K.npy"))
 print("*****EXPECTED K*****")
 print(np.load('data/processed/K.npy'))
-

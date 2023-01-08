@@ -32,6 +32,7 @@ def process_calibration(frame):
         raise Exception("[ERROR] Fail to get frame from video.")
 
 
+########## LOAD VIDEO ##########
 video_capture = VideoCapture(configs.calibration["input_video"])
 
 if not os.path.exists("output"):
