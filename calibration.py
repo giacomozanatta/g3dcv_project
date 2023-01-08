@@ -34,33 +34,28 @@ def process_calibration(frame):
 
 video_capture = VideoCapture(configs.calibration["input_video"])
 
-total_frames = video_capture.video_cap_info.total_frames
-video_width = video_capture.video_cap_info.video_width
-video_height = video_capture.video_cap_info.video_height
-fps = video_capture.video_cap_info.fps
-
 if not os.path.exists("output"):
     os.makedirs("output")
 
-output_video = cv2.VideoWriter('output/calibration_debug.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 2, (video_width, video_height))
+output_video = cv2.VideoWriter('output/calibration_debug.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 2, (video_capture.video_cap_info.video_width, video_capture.video_cap_info.video_height))
 
 
-
+########## PRINT INFOS ##########
 print("[INFO] Frames to process: {}".format(configs.calibration["frames_to_process"]))
-print("[INFO] Frame count: {}".format(total_frames))
-frame_offset = int(total_frames/total_frames)
+print("[INFO] Frame count: {}".format(video_capture.video_cap_info.total_frames))
+frame_offset = int(video_capture.video_cap_info.total_frames/configs.calibration["frames_to_process"])
 print("[INFO] Frame offset: {}".format(frame_offset))
 
+#################### CALIBRATE CAMERA ####################
 video_capture.process_video(process_calibration, configs.calibration["frames_to_process"])
 first_frame = video_capture.get_first_frame()
-
-# perform calibration
 print("[INFO] Calibrating camera...")
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY).shape[::-1], None, None)
 print("[INFO] dist array: {}".format(dist))
 print("[INFO K matrix: {}".format(mtx))
 print("[INFO] Save data")
 
+#################### SAVE DATA FOR NEXT STEPS ####################
 np.save("output/dist.npy", dist)
 np.save("output/K.npy", mtx)
 video_capture.cap.release()
