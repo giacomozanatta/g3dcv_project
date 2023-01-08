@@ -1,7 +1,6 @@
 import cv2
 from .videocapinfo import VideoCapInfo
-
-
+from util import *
 class VideoCapture:
     """ This Class is a wrapper for cv2.VideoCapInfo, enhanced with additional functions and variables useful for the scope of the project.
         The constructor takes in input the path of the video file and create a cv2.VideoCapture and a VideoCapInfo object.
@@ -23,7 +22,14 @@ class VideoCapture:
             ret, frame = self.cap.read()
             if ret == True:
                 process_func(frame)
-    def get_first_frame(self):
+        # reset the pos frame
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    
+    def get_first_frame(self):
+        return self.get_frame(0)
+
+    def get_frame(self, frame_no):
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_no)
         _, frame = self.cap.read()
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         return frame

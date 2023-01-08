@@ -2,8 +2,8 @@ import os
 import numpy as np
 import cv2
 from lib.videocapture import *
-
-DEBUG = True
+import configs
+from util import *
 
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -24,16 +24,15 @@ def process_calibration(frame):
         imgpoints.append(corners)
         corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
         cv2.drawChessboardCorners(frame, (9, 6), corners2, ret)
-        if DEBUG:
+        if configs.DEBUG:
             cv2.imshow('Frame', frame)
             cv2.waitKey(25)
         output_video.write(frame)
     else:
         raise Exception("[ERROR] Fail to get frame from video.")
 
-frames_to_process = 100
 
-video_capture = VideoCapture('data/calibration.mp4')
+video_capture = VideoCapture(configs.calibration["input_video"])
 
 total_frames = video_capture.video_cap_info.total_frames
 video_width = video_capture.video_cap_info.video_width
@@ -47,12 +46,12 @@ output_video = cv2.VideoWriter('output/calibration_debug.avi',cv2.VideoWriter_fo
 
 
 
-print("[INFO] Frames to process: {}".format(frames_to_process))
+print("[INFO] Frames to process: {}".format(configs.calibration["frames_to_process"]))
 print("[INFO] Frame count: {}".format(total_frames))
 frame_offset = int(total_frames/total_frames)
 print("[INFO] Frame offset: {}".format(frame_offset))
 
-video_capture.process_video(process_calibration, frames_to_process)
+video_capture.process_video(process_calibration, configs.calibration["frames_to_process"])
 first_frame = video_capture.get_first_frame()
 
 # perform calibration
@@ -67,4 +66,3 @@ np.save("output/K.npy", mtx)
 video_capture.cap.release()
 output_video.release()
 cv2.destroyAllWindows()
-
