@@ -24,13 +24,13 @@ def carving_process(frame):
     ## UNDISTORT FRAME ##
     # use dist and K generated from calibration to undistort the current frame.
     cv2.imshow('FRAME', frame)
-    undistort_frame(frame)
+    frame = undistort_frame(frame)
     cv2.imshow('FRAME_UNDISTORT', frame)
     ## BACKGROUND REMOVAL
     background_removal(frame, conf, object_id)
     # cv2.imshow('frame_bgrem', frame)
     cv2.imshow('FRAME_BGREM', frame)
-    project_voxels(frame)
+    project_voxels(frame, conf, object_id)
     cv2.imshow('FRAME_PROJ_VOXEL', frame)
     
     cv2.waitKey(25)
@@ -44,6 +44,7 @@ def test_region_object(frame):
 
 def undistort_frame(frame):
     h,  w = frame.shape[:2]
+    cv2.imwrite('beforecalibration.png', frame)
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(K, dist, (w,h), 1, (w,h))
     # undistort
     dst = cv2.undistort(frame, K, dist, None, newcameramtx)
@@ -63,7 +64,7 @@ def carving_function(frame):
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     result = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
-
+    
     cv2.imshow('thresh', thresh)
     cv2.imshow('result', result)
 

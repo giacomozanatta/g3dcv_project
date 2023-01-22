@@ -1,6 +1,7 @@
 from lib.point import *
 from lib.region import *
 import numpy as np
+import cv2
 DEBUG = True
 
 calibration = {
@@ -12,10 +13,12 @@ bgrem_yellow_rem =  Region(1000,1020,200,800)
 
 bg_region = Region(0,1080,0,1000)
 
-approx_poly_epsilon = 10 
+approx_poly_epsilon = 5 
 
 dilate_kernel = np.ones((2, 2), np.uint8)
 erode_kernel = np.ones((1, 1), np.uint8)
+
+corner_subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
 objects = {
     "obj01": {
         "center": Point(660,540),
