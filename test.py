@@ -7,7 +7,7 @@ import math
 from marker import *
 import time
 obj = "obj01"
-
+ 
 central_point = conf.objects[obj]["center"]
 
 padding = conf.objects[obj]["padding"]
