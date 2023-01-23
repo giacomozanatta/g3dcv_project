@@ -28,8 +28,9 @@ def process_calibration(frame):
             cv2.imshow('Frame', frame)
             cv2.waitKey(25)
         output_video.write(frame)
-    else:
-        raise Exception("[ERROR] Fail to get frame from video.")
+    #else:
+        ## skip
+        #raise Exception("[ERROR] Fail to get frame from video.")
 
 
 ########## LOAD VIDEO ##########
