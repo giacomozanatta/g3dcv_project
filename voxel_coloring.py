@@ -6,6 +6,8 @@ import configs
 from lib.voxel import *
 from lib.videocapture import *
 
+frame_counter = 0
+
 x_axis = np.float32([[0,0,0], [-50,0,0]]).reshape(-1,3)
 
 def voxel_set_to_3D_matrix(voxel_set):
@@ -96,7 +98,7 @@ def save_ply(name, data, M):
         f.close()
 
 
-def process_voxing(frame):
+def process_voxing_v1(frame):
     global voxel_set
     global M
     frame = undistort_frame(frame, K, dist)
@@ -208,6 +210,253 @@ def process_voxing(frame):
     cv2.imshow('QUADRANTS', frame)
     cv2.waitKey(25)
 
+
+def process_voxing_v2(frame):
+    global voxel_set
+    global M
+    global frame_counter
+    frame_counter += 1
+    frame = undistort_frame(frame, K, dist)
+    background_removal(frame, configs)
+    old_frame = frame.copy()
+    rvec, tvec = pose_estimation(old_frame, configs, K)
+    imgpts = cv2.projectPoints(x_axis, rvec, tvec, K, np.array([]))
+    cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][1][0], dtype=np.int32), (255,0,0), 5)
+    img_x_axis = np.int32([[imgpts[0][0][0][0],imgpts[0][0][0][1]], [imgpts[0][0][0][0]+50,imgpts[0][0][0][1]]]).reshape(-1,2)
+
+    cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][1][0], dtype=np.int32), (255,0,0), 5)
+
+    voxel_pts = cv2.projectPoints(np.array(voxel_set.set), rvec, tvec, K, np.array([]))
+
+    cv2.line(frame, img_x_axis[0], img_x_axis[1], (255,255,0), 5)
+    # TODO: Fix frames
+    if configs.working_object == 'obj01':
+        if not (frame_counter == 25 or frame_counter == 105 or frame_counter == 185 or frame_counter == 300):
+            return;
+    if configs.working_object == 'obj02':
+        if not (frame_counter == 83 or frame_counter == 169 or frame_counter == 192 or frame_counter == 283):
+            return;
+    if configs.working_object == 'obj02':
+        if not (frame_counter == 83 or frame_counter == 169 or frame_counter == 192 or frame_counter == 283):
+            return;
+    if configs.working_object == 'obj04':
+        if not (frame_counter == 55 or frame_counter == 170 or frame_counter == 252 or frame_counter == 352):
+            return;
+    delta_X = imgpts[0][1][0][0] - imgpts[0][0][0][0]
+    delta_Y = imgpts[0][1][0][1] - imgpts[0][0][0][1]
+    # CHECK WHICH VOXEL NEEDS TO BE COLORED
+    # get only the external voxel:
+    # 
+    if delta_X >= 0 and delta_Y >= 0:
+        if delta_X > delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_min_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '1 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_min_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '4 - min x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+
+    if delta_X >= 0 and delta_Y < 0:
+        #for j in range(len(voxel_pts[0])):
+        if delta_X > - delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_min_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '1 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:   
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_max_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '2 - max x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+    if delta_X < 0 and delta_Y < 0:
+        if delta_X > delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_max_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '2 - max x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_max_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '3 - max y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        print('THIRD quadrant')
+    if delta_X < 0 and delta_Y >= 0:
+        if -delta_X < delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_min_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '4 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_max_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '3 - max y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+    cv2.imshow('QUADRANTS', frame)
+    cv2.waitKey(25)
+
+
+def process_voxing_v3(frame):
+    global voxel_set
+    global M
+    global frame_counter
+    frame_counter += 1
+    frame = undistort_frame(frame, K, dist)
+    background_removal(frame, configs)
+    old_frame = frame.copy()
+    rvec, tvec = pose_estimation(old_frame, configs, K)
+    imgpts = cv2.projectPoints(x_axis, rvec, tvec, K, np.array([]))
+    cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][1][0], dtype=np.int32), (255,0,0), 5)
+    img_x_axis = np.int32([[imgpts[0][0][0][0],imgpts[0][0][0][1]], [imgpts[0][0][0][0]+50,imgpts[0][0][0][1]]]).reshape(-1,2)
+
+    cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][1][0], dtype=np.int32), (255,0,0), 5)
+
+    voxel_pts = cv2.projectPoints(np.array(voxel_set.set), rvec, tvec, K, np.array([]))
+
+    cv2.line(frame, img_x_axis[0], img_x_axis[1], (255,255,0), 5)
+
+    delta_X = imgpts[0][1][0][0] - imgpts[0][0][0][0]
+    delta_Y = imgpts[0][1][0][1] - imgpts[0][0][0][1]
+    # CHECK WHICH VOXEL NEEDS TO BE COLORED
+    # get only the external voxel:
+    # 
+    if delta_X >= 0 and delta_Y >= 0:
+        if delta_X > delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_min_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '1 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_min_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '4 - min x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+
+    if delta_X >= 0 and delta_Y < 0:
+        #for j in range(len(voxel_pts[0])):
+        if delta_X > - delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_min_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '1 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:   
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_max_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '2 - max x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+    if delta_X < 0 and delta_Y < 0:
+        if delta_X > delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_max_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                if M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] == 0:
+                    color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '2 - max x', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_max_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                if M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] == 0:
+                    color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '3 - max y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        print('THIRD quadrant')
+    if delta_X < 0 and delta_Y >= 0:
+        if -delta_X < delta_Y:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                x = get_min_x_given_yz(M, voxel_3d_point[1], voxel_3d_point[2])
+                if M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] == 0:
+                    color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['R'] += int(color[2])
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['G'] += int(color[1])
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['B'] += int(color[0])
+                    M[x][voxel_3d_point[1]][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '4 - min y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        else:
+            for j in range(len(voxel_pts[0])):
+                voxel_3d_point = voxel_set.set[j]
+                y = get_max_y_given_xz(M, voxel_3d_point[0], voxel_3d_point[2])
+                if M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] == 0:
+                    color = frame[np.int32(voxel_pts[0][j][0][1]),np.int32(voxel_pts[0][j][0][0])]
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['R'] += int(color[2])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['G'] += int(color[1])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['B'] += int(color[0])
+                    M[voxel_3d_point[0]][y][voxel_3d_point[2]]['acc'] += 1
+            cv2.putText(frame, '3 - max y', np.int32(imgpts[0][1][0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+    cv2.imshow('QUADRANTS', frame)
+    cv2.waitKey(25)
+
+
 video_capture = VideoCapture('data/' + configs.working_object + '.mp4')
-video_capture.process_video(process_voxing)
-save_ply(configs.working_object + '-color', voxel_set, M)
+video_capture.process_video(process_voxing_v3)
+save_ply(configs.working_object + '-color-v3', voxel_set, M)

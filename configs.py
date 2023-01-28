@@ -6,7 +6,7 @@ from lib.voxel import *
 ### CONFIG FILE ###
 # Settings for objects
 
-working_object = "obj02" # object to process (object id)
+working_object = "obj01" # object to process (object id)
 
 DEBUG = True # debug flag (if true, print info on console)
 
@@ -67,7 +67,7 @@ objects = {
         "padding": 310,
         "input_video": "data/obj04.mp4",
         "enhanced_bg_removal": False,
-        "voxel_set_padding": 50,
+        "voxel_set_padding": 60,
         "voxel_set_N": 100,
         "voxel_set_center": Point3D(0,0,150),
     },
