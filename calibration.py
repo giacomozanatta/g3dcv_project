@@ -58,7 +58,7 @@ print("[INFO] Calibrating camera...")
 # calibrate camera in order to retrieve intrinsic and extrinsic parameters of camera.
 # we are interested in: distortion coefficient, K matrix (camera matrix)
 # dist coeff permits to remove radial distortion (straight lines view as a curve), tangent distortion (when lense is not aligned perfectly parallel to the image plane.)
-# rvecs, tvecs -> extrinsic parameters -> rotation and translation vectors -> translates 3D point to a 2D point.
+# rvecs, tvecs -> extrinsic parameters (parameters external to camera) -> rotation and translation vectors -> translates 3D point to a 2D point.
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY).shape[::-1], None, None)
 print("[INFO] dist array: {}".format(dist))
 print("[INFO K matrix: {}".format(mtx))

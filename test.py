@@ -271,4 +271,3 @@ def project_voxels(frame, conf, obj):
         cv2.circle(frame, np.int32(imgpts[0][j][0]), 1, (0,0,255), -1)
         l += 1
     #cv2.imshow('GRAY', gray_2)
-    save_ply(obj, voxel_set)

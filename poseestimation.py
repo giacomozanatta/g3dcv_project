@@ -42,7 +42,8 @@ def pose_estimation(frame, conf, K):
         zeroZone = (1, 1)
         corners = cv2.cornerSubPix(th, np.float32(approx), winSize, zeroZone, conf.criteria)
 
-        # order the corners (find the first corner)
+        # order the corners (find the first corner):
+        # get the convex hull and extract the point that it is not in the convex hull. This point is the starting point.
         hull = cv2.convexHull(approx)
         for j, point in enumerate(approx):
             if not is_point_in_array(point, hull):
@@ -51,7 +52,9 @@ def pose_estimation(frame, conf, K):
 
         cv2.drawContours(frame, [approx], 0, (100, 100, 0), -1)
         cv2.drawContours(frame, [hull], 0, (100, 0, 100), 3)
+        # find object pose. Find rotation and translation vectors
         rtval, rvec, tvec = cv2.solvePnP(Marker_0, corners, K, np.array([]), flags = cv2.SOLVEPNP_IPPE);
+        # 3D to 2D point projections. Try to get 2dPoints w.r.t. using rotation and translations 
         imgPts = cv2.projectPoints(Marker_circles_0, rvec, tvec, K, np.array([]))
 
 
@@ -84,6 +87,7 @@ def pose_estimation(frame, conf, K):
     rtval, rvec, tvec = cv2.solvePnP(OBJ_PTS, IMG_PTS, K, np.array([]), flags = cv2.SOLVEPNP_IPPE);
 
     #imgPts = cv2.projectPoints(get_marker_position(3), rvec, tvec, K, dist)
+    # note: dist empty array because frame is undistort.
     imgpts = cv2.projectPoints(conf.axis, rvec, tvec, K, np.array([]))
     cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][1][0], dtype=np.int32), (255,0,0), 5)
     cv2.line(frame, np.array(imgpts[0][0][0], dtype=np.int32), np.array(imgpts[0][2][0], dtype=np.int32), (0,255,0), 5)

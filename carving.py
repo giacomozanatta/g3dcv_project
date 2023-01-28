@@ -15,10 +15,9 @@ import pickle
 dist = np.load("output/dist.npy")
 K = np.load("output/K.npy")
 
-central_point = Point(660,540)
 
 
-voxel_set = VoxelSet(configs.voxel_set_center, configs.objects[configs.working_object]['voxel_set_padding'], configs.objects[configs.working_object]['voxel_set_N'])
+voxel_set = VoxelSet(configs.objects[configs.working_object]['voxel_set_center'], configs.objects[configs.working_object]['voxel_set_padding'], configs.objects[configs.working_object]['voxel_set_N'])
 
 def save_ply(name, data):
     offset = data.offset
@@ -72,8 +71,8 @@ def carving_process(frame):
     old_frame = frame.copy()
     rvec, tvec = pose_estimation(frame, conf, K)
     cv2.imshow('FRAME_POSEEST', frame)
-    #voxel_set = carving_function(frame, conf, K, rvec, tvec, voxel_set)
-    #project_voxels(frame, conf, object_id)
+    voxel_set = carving_function(frame, conf, K, rvec, tvec, voxel_set)
+    #project_voxels(frame, conf, conf.working_object)
     cv2.imshow('FRAME_VOXELS', frame)
     cv2.waitKey(25)
 
@@ -82,7 +81,7 @@ def carving_function(frame, conf, K, rvec, tvec, voxel_set):
     imgpts = cv2.projectPoints(np.array(voxel_set.set, dtype = np.double), rvec, tvec, K, np.array([]))
     l = 0
     for j in range(len(imgpts[0])):
-        if gray[np.int32(imgpts[0][j][0][1]),np.int32(imgpts[0][j][0][0])] == 0:
+        if 1000 < np.int32(imgpts[0][j][0][1]) or 1000 < np.int32(imgpts[0][j][0][0]) or gray[np.int32(imgpts[0][j][0][1]),np.int32(imgpts[0][j][0][0])] == 0:
             voxel_set.set.pop(l)
             l -= 1
         cv2.circle(frame, np.int32(imgpts[0][j][0]), 1, (0,0,255), -1)
@@ -91,7 +90,11 @@ def carving_function(frame, conf, K, rvec, tvec, voxel_set):
 
 video_capture = VideoCapture('data/' + configs.working_object + '.mp4')
 video_capture.process_video(carving_process)
+#frame = video_capture.get_frame(128)
+#background_removal(video_capture.get_frame(690), conf)
+#cv2.waitKey(0)
+#print(frame.shape[1])
 save_ply(conf.working_object, voxel_set)
-# save voxel_set
+# save voxel_set (for voxel coloring)
 with open('output/voxels_' + conf.working_object + '.pkl', 'wb') as f:
     pickle.dump(voxel_set, f, pickle.HIGHEST_PROTOCOL)

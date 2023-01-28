@@ -21,7 +21,7 @@ def p(frame):
     ## CREATE MASK ##
     # Set 
     mask = cv2.inRange(frame, b_min, b_max)[background_region.min_h:background_region.max_h, background_region.min_w:background_region.max_w]
-    mask[conf.bgrem_yellow_rem.min_w:conf.bgrem_yellow_rem.max_w, conf.bgrem_yellow_rem.min_h:conf.bgrem_yellow_rem.max_h] = 255
+    #mask[conf.bgrem_yellow_rem.min_w:conf.bgrem_yellow_rem.max_w, conf.bgrem_yellow_rem.min_h:conf.bgrem_yellow_rem.max_h] = 255
     
     ## CLOSING: dilation + erosion ##
 
