@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 Marker_0 = np.array([
                         (70, 0, 0),     # A
@@ -62,3 +63,11 @@ def get_marker_position(position):
         (round(mag_D * (np.cos(np.radians(_angle_D)))), round(mag_D * (np.sin(np.radians(_angle_D)))), 0),  # D
         (round(mag_E * (np.cos(np.radians(_angle_E)))), round(mag_E * (np.sin(np.radians(_angle_E)))), 0),  # E
     ], dtype="double")
+
+def get_marker_number(th_img, points):
+    out = 0
+    for i in range(5):
+            # white (255) is 0, black (0) is 1
+            if th_img[int(points[0][i][0][1]), int(points[0][i][0][0])] == 0:
+                out += int(math.pow(2, i))
+    return out

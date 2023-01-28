@@ -13,7 +13,7 @@ obj = "obj01"
 central_point = conf.objects[obj]["center"]
 
 padding = conf.objects[obj]["padding"]
-voxel_set = VoxelSet(Point3D(0,0,140), 60, 100)
+voxel_set = VoxelSet(Point3D(0,0, 140), 60, 100)
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 axis = np.float32([[0,0,0], [50,0,0],[0,50,0], [0,0,50]]).reshape(-1,3)
 
@@ -106,9 +106,9 @@ def project_voxels(frame, conf, obj):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray_2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #blur = cv2.GaussianBlur(frame,(5,5),0)
-    #b_min = np.array([50,  20, 10],np.uint8)
-    #b_max = np.array([160,  102, 90],np.uint8)
-
+    b_min = np.array([50,  20, 10],np.uint8)
+    b_max = np.array([160,  102, 90],np.uint8)
+    print(gray[background_region.min_h:background_region.max_h, background_region.min_w:background_region.max_w])
     # Make all pixels in mask white
     gray[background_region.min_h:background_region.max_h, background_region.min_w:background_region.max_w] = 0
     otsu,th3 = cv2.threshold(gray, 160,255,cv2.THRESH_BINARY)
@@ -128,7 +128,10 @@ def project_voxels(frame, conf, obj):
         # skip also small polygons
         if approx.shape[0] != 5 or cv2.isContourConvex(approx) or area < 4200: 
             continue
+        #print(area)
         #draw contours for debugging
+
+        #cv2.cornerSubPix()
         winSize = (5, 5)
         zeroZone = (1, 1)
         corners = cv2.cornerSubPix(th3, np.float32(approx), winSize, zeroZone, criteria)
@@ -143,6 +146,13 @@ def project_voxels(frame, conf, obj):
         cv2.drawContours(frame, [approx], 0, (100, 100, 0), -1)
         cv2.drawContours(frame, [hull], 0, (100, 0, 100), 3)
         rtval, rvec, tvec = cv2.solvePnP(Marker_0, corners, K, np.array([]), flags = cv2.SOLVEPNP_IPPE);
+        #M = cv2.getPerspectiveTransform(np.array(np.squeeze(hull),dtype=np.float32), np.array([
+                        #[(70, 0)],     # A
+                        #(65, 5),     # B
+                        #(98, 5),     # C
+                        #(98, -5),    # D
+                        #(65, -5),    # E
+                    #], dtype=np.float32))
         imgPts = cv2.projectPoints(Marker_circles_0, rvec, tvec, K, np.array([]))
 
 
@@ -164,6 +174,7 @@ def project_voxels(frame, conf, obj):
         #for i in range(24):
         #    imgPts = cv2.projectPoints(get_marker_position(i), rvec, tvec, K, np.array([]))
         #    cv2.drawContours(frame, np.array([imgPts[0]], dtype=np.int32), 0, (100, 0, 255), 4)
+        print(mk_number)
         #cv2.line(frame, np.array(imgPtd[0][0][0], dtype=np.int32), np.array(imgPtd[0][1][0], dtype=np.int32), (255,0,0), 5)
         #cv2.line(frame, np.array(imgPtd[0][0][0], dtype=np.int32), np.array(imgPtd[0][2][0], dtype=np.int32), (0,255,0), 5)
         #cv2.line(frame, np.array(imgPtd[0][0][0], dtype=np.int32), np.array(imgPtd[0][3][0], dtype=np.int32), (0,0,255), 5)
@@ -173,7 +184,7 @@ def project_voxels(frame, conf, obj):
         #imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, K, dist)
         #img = draw(frame,imagePoints,imgpts)
         #cv2.imshow('img',img)
-        #cv2.imshow('test', cv2.warpPerspective(frame, M, dsize=(1000,1000)))
+        #cv2.imshow('CIAO', cv2.warpPerspective(frame, M, dsize=(1000,1000)))
         #H = np.matrix( cv2.findHomography( corners, Marker_0, 0 )[0] )
         #4 if th3[int(corners[0][0][1]), int(corners[0][0][0])] == 0 else -1
 
@@ -182,7 +193,7 @@ def project_voxels(frame, conf, obj):
         cv2.circle(frame, np.int32(corners[2][0]), 5, (255,0,255), 4)
         cv2.circle(frame, np.int32(corners[3][0]), 5, (255,0,0), 4)
         cv2.circle(frame, np.int32(corners[4][0]), 5, (0,255,0), 4)
-        # draw the corners:
+            # draw the corners:
         # A -> RED
         # B -> YELLOW
         # C -> MAGENTA

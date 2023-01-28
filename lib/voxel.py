@@ -1,4 +1,4 @@
-from point import *
+from lib.point import *
 class Voxel:
     def __init__(self, x, y, z):
         self.x = x
@@ -6,13 +6,11 @@ class Voxel:
         self.z = z
 
 class VoxelSet:
-    def __init__(self, center, padding, n):
-        offset = (padding*2)/n
+    def __init__(self, center: Point3D, padding, n):
+        self.offset = (padding*2)/n
         self.set = []
-        j = 0
-        for i in range(0,n+1):
-            print(center.x - padding + (i * offset))
-            j+=1
-            self.set.append(Voxel(center.x - padding + (i * offset), center.x - padding + (i * offset), 0))
-        print(j)
-VoxelSet(Point(500,500), 300, 100)
+        self.n = n
+        for i in range(0,n):
+            for j in range(0, n):
+                for k in range(0, n):
+                    self.set.append([center.x - padding + (i * self.offset), center.y - padding + (j * self.offset), center.z - padding + (k * self.offset)])
